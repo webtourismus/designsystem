@@ -1,0 +1,7 @@
+services:
+  designsystem.helper:
+    class: Drupal\designsystem\DesignHelper
+  designsystem.icon_builer:
+    decorates: layout.icon_builder
+    class: Drupal\designsystem\DesignSystemLayoutIconBuilder
+    shared: false

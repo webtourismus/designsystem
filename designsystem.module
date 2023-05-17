@@ -1,0 +1,499 @@
+<?php
+
+declare(strict_types=1);
+
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
+use Drupal\designsystem\DesignHelper;
+use Drupal\media\MediaInterface;
+use Drupal\node\Entity\Node;
+use Drupal\paragraphs\Entity\Paragraph;
+use Drupal\layout_paragraphs\LayoutParagraphsComponent;
+use Drupal\Core\Template\Attribute;
+use Drupal\node\NodeInterface;
+use Drupal\Core\Entity\EntityFormInterface;
+
+/**
+ * Note that the default template variables are statically cached within a
+ * request.
+ *
+ * This function is invoked by global template_process() and therefore
+ * available in all templates. Note that the default template variables are
+ * statically cached within a request. Do not use for variables that might
+ * change within a request.
+ */
+function designsystem_template_preprocess_default_variables_alter(&$variables): void {
+  $variables['is_admin_user'] = \Drupal::currentUser()
+    ->hasPermission('access administration pages');
+
+  $variables['is_admin_theme'] = \Drupal::service('router.admin_context')->isAdminRoute();
+
+  // ISO2 language code of the user interface. Note that this may not be the same as the
+  // content entity's language (except being not translated it might also vary in between
+  // templates during the same request).
+  $variables['langcode'] = \Drupal::languageManager()->getCurrentLanguage()->getId();
+}
+
+function designsystem_preprocess_html(&$variables): void {
+  $variables['html_attributes'] = DesignHelper::toAttributeObject($variables['html_attributes'] ?? []);
+
+  if ($variables['is_admin_theme']) {
+    $variables['html_attributes']->addClass('is-backend');
+  }
+  else {
+    $variables['html_attributes']->addClass('is-frontend');
+  }
+
+  if (\Drupal::service('path.matcher')->isFrontPage()) {
+    $variables['html_attributes']->addClass('is-frontpage');
+  }
+
+  $router = \Drupal::routeMatch();
+  $routeName = $router->getRouteName();
+  $node = $router->getParameter('node');
+  if (!$node && $routeName == 'entity.node.preview') {
+    $node = $router->getParameter('node_preview');
+  }
+  if (is_numeric($node)) {
+    $node = Node::load($node);
+  }
+  if ($node instanceof Node) {
+    $variables['node'] = $node;
+    $variables['html_attributes']->addClass('node');
+    $variables['html_attributes']->addClass("node--id--{$node->id()}");
+    $variables['html_attributes']->addClass("node--type--{$node->bundle()}");
+    // Only route 'entity.node.preview' is known to set a view mode.
+    $viewMode = $router->getParameter('view_mode_id') ?? 'full';
+    $variables['html_attributes']->addClass("node--view-mode--{$viewMode}");
+
+    if (!$node->hasField('field_banner') || $node->get('field_banner')?->isEmpty()) {
+      $variables['html_attributes']->addClass('node--no-banner');
+      return;
+    }
+    $variables['html_attributes']->addClass('node--has-banner');
+    if (!$node->hasField('field_banner_viewmode') || $node->get('field_banner_viewmode')?->isEmpty()) {
+      return;
+    }
+    $variables['html_attributes']->addClass("node--banner--{$node->get('field_banner_viewmode')->first()->value}");
+    return;
+  }
+
+  if (in_array($router->getRouteName(), ['user.login', 'user.pass', 'user.reset.form', 'user.register'])) {
+    $variables['html_attributes']->addClass('is-login');
+    $variables['html_attributes']->addClass('is-login--' . str_replace(['user.', 'reset.'], ['', 'reset-'], $routeName));
+    return;
+  }
+
+  if ($view = $router->getParameter('view_id')) {
+    $display = $router->getParameter('display_id');
+    $variables['html_attributes']->addClass("views");
+    $variables['html_attributes']->addClass("views--id--{$view}");
+    $variables['html_attributes']->addClass("views--display--{$display}");
+    $variables['html_attributes']->addClass("views--{{ $view }}--{{ $display }}");
+  }
+}
+
+function designsystem_preprocess_page(&$variables):void {
+  $variables['attributes'] = DesignHelper::toAttributeObject($variables['attributes'] ?? []);
+  $router = \Drupal::routeMatch();
+  if (
+    empty($variables['node']) &&
+    $router->getRouteName() == 'entity.node.preview' &&
+    $previewNode = $router->getParameter('node_preview')
+  ) {
+    $variables['node'] = $previewNode;
+  }
+}
+
+function designsystem_preprocess_node(&$variables):void {
+  /** @var $node \Drupal\node\NodeInterface */
+  $node = $variables['node'];
+  $variables['attributes'] = DesignHelper::toAttributeObject($variables['attributes'] ?? []);
+  $variables['attributes']->addClass("node");
+  $variables['attributes']->addClass("node--id--{$node->id()}");
+  $variables['attributes']->addClass("node--type--{$node->bundle()}");
+  $viewMode = $variables['view_mode'];
+  $variables['attributes']->addClass("node--view-mode--{$viewMode}");
+
+  if ($viewMode != 'full' || \Drupal::routeMatch()->getParameter('node') === $node) {
+    return;
+  }
+}
+
+/**
+ * Convert all layout (Twig) attribute variables into full Attribute objects
+ * so we can savely use the objects helper classes everywhere.
+ */
+function designsystem_preprocess_layout(&$variables): void {
+  $variables['bg_wrapper_attributes'] = DesignHelper::toAttributeObject(
+    $variables['bg_wrapper_attributes'] ??
+    $variables['content']['#bg_wrapper_attributes'] ??
+    []
+  );
+  $variables['width_wrapper_attributes'] = DesignHelper::toAttributeObject(
+    $variables['width_wrapper_attributes'] ??
+    $variables['content']['#width_wrapper_attributes'] ??
+    []
+  );
+  $variables['attributes'] = DesignHelper::toAttributeObject(
+    $variables['attributes'] ??
+    $variables['content']['#attributes'] ??
+    []
+  );
+  _designsystem_preprocess_layout__add_default_classes($variables);
+}
+
+/**
+ * Add a set of default CSS classes to all layouts and regions.
+ */
+function _designsystem_preprocess_layout__add_default_classes(&$variables): void {
+  $layoutDefinition = $variables['layout'];
+  $layoutName = $layoutDefinition->id();
+  $variables['bg_wrapper_attributes']->addClass('bg-wrapper');
+  $variables['bg_wrapper_attributes']->addClass("bg-wrapper-{$layoutName}");
+  $variables['width_wrapper_attributes']->addClass('width-wrapper');
+  $variables['width_wrapper_attributes']->addClass("width-wrapper-{$layoutName}");
+  $variables['attributes']->addClass('layout');
+  $variables['attributes']->addClass("layout-{$layoutName}");
+  $layoutParagraphId = $variables['settings']['layout_paragraphs_section']?->getEntity()?->id();
+  if ($layoutParagraphId) {
+    $variables['bg_wrapper_attributes']->addClass("paragraph--id--{$layoutParagraphId}");
+  }
+
+  foreach ($variables['region_attributes'] as $regionName => $attributeObject) {
+    $variables['region_attributes'][$regionName]->addClass('area');
+    $variables['region_attributes'][$regionName]->addClass("area-{$layoutName}");
+    $variables['region_attributes'][$regionName]->addClass("area-{$regionName}");
+    $variables['region_attributes'][$regionName]->addClass("area-{$layoutName}-{$regionName}");
+  }
+}
+
+/**
+ * Add a set of default CSS classes to all paragraphs, including
+ * layout information.
+ */
+function designsystem_preprocess_paragraph(&$variables): void {
+  $paragraph = $variables['paragraph'];
+  $variables['attributes'] = DesignHelper::toAttributeObject($variables['attributes'] ?? []);
+  $variables['attributes']->addClass("paragraph--id--" . $paragraph->id());
+  _designsystem_preprocess_paragraph__add_layout_info($variables);
+}
+
+function _designsystem_preprocess_paragraph__add_layout_info(&$variables): void {
+  $layoutInfo = _getLayoutInfoForParagraph($variables['paragraph']);
+  if (empty($layoutInfo)) {
+    return;
+  }
+  $variables['#layout_paragraphs'] = $layoutInfo;
+  if (($layoutInfo['layout'] ?? FALSE) && empty($layoutInfo['region'])) {
+    $variables['attributes']->addClass('paragraph--layout');
+    $variables['attributes']->addClass("paragraph--layout--{$layoutInfo['layout']}");
+  }
+  else {
+    $variables['attributes']->addClass('component');
+    // When adding nested paragraphs into newly created layouts,
+    // the lookup might not yet work before saving it the first time.
+    $layout = $layoutInfo['layout'] ?? 'LAYOUT_NOT_YET_PERSISTED';
+    $variables['attributes']->addClass("component-{$layout}");
+    $region = $layoutInfo['region'] ?? NULL;
+    if ($region) {
+      $variables['attributes']->addClass("component-{$region}");
+      $variables['attributes']->addClass("component-{$layout}-{$region}");
+    }
+  }
+}
+
+
+/**
+ * Gets layout information for Layout paragraphs.
+ *
+ * @param Paragraph $paragraph
+ * @return array[
+ *   region       => (string) region id,
+ *   layout       => (string) layout id,
+ *   parent_uuid  => (string) layout paragraph uuid,
+ *   parent_id    => (int)    layout paragraph id,
+ *   config       => (array)  layout config,
+ * ]
+ */
+function _getLayoutInfoForParagraph(Paragraph $paragraph):array {
+  $result = [];
+  $component = new LayoutParagraphsComponent($paragraph);
+  if (!$component->isLayout() && empty($component->getRegion())) {
+    return $result;
+  }
+  $result = $component->getSettings();
+  $parentUuid = $result['parent_uuid'] ?? NULL;
+  if ($parentUuid) {
+    $layoutParagraphs = \Drupal::entityTypeManager()
+      ->getStorage('paragraph')
+      ->loadByProperties([
+        'uuid' => $parentUuid,
+      ]);
+    $layoutParagraph = reset($layoutParagraphs);
+    if ($layoutParagraph instanceof Paragraph) {
+      $layoutComponent = new LayoutParagraphsComponent($layoutParagraph);
+      $result += $layoutComponent->getSettings();
+      $result['parent_id'] = $layoutParagraph->id();
+    }
+  }
+  return $result;
+}
+
+function designsystem_entity_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
+  // Order of invoking function calls matters here: Build data must be generated first,
+  // then manipulate the image style if necessary, no matter where images were sourced from.
+  _designsystem_entity_view_alter__imageRatioField($build, $entity, $display);
+}
+
+function _designsystem_entity_view_alter__imageRatioField(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
+  if (!($entity instanceof ContentEntityInterface) || !$entity->hasField('field_image_ratio')) {
+    return;
+  }
+  $responsiveImageStyle = $entity->get('field_image_ratio')->target_id;
+  if (!$responsiveImageStyle) {
+    return;
+  }
+
+  // By convention field_image_ratio targets single- and multi-cardinality fields
+  // of type "image" or "entity references", commonly used by pictorial entities
+  // or teaserable entities. Other image fields must not be modified here.
+  $applicableFieldNames = ['field_images', 'field_image', 'field_imagefiles', 'field_imagefile'];
+  $fieldName = NULL;
+  foreach ($applicableFieldNames as $applicableFieldName) {
+    if (array_key_exists('0', $build[$applicableFieldName] ?? [])) {
+      $fieldName = $applicableFieldName;
+      break;
+    }
+  }
+
+  if (!$fieldName) {
+    return;
+  }
+
+  foreach (Element::children($build[$fieldName]) as $delta => $field) {
+    if ($build[$fieldName]['#formatter'] == 'entity_reference_entity_view' &&
+      ($media = $build[$fieldName][$delta]['#media']) instanceof MediaInterface
+    ) {
+      /** @var $displayRepository \Drupal\Core\Entity\EntityDisplayRepositoryInterface */
+      if (!array_key_exists(
+        $build[$fieldName][$delta]['#view_mode'],
+        \Drupal::service('entity_display.repository')->getViewModeOptionsByBundle('media', $media->bundle()))
+      ) {
+        // By convention every responsive image style must must have a corresponding media entity view mode.
+        // For other media entities, this is optional.
+        if ($media->bundle() == 'image') {
+          \Drupal::logger('designsystem')->warning("Entity {$entity->getEntityTypeId()} ID {$entity->id()} wants to render {$fieldName} in style {$responsiveImageStyle}, but it references media entities and has no corresponding media entity view mode.");
+        }
+        return;
+      }
+      $oldCacheKey = array_search($build[$fieldName][$delta]['#view_mode'], $build[$fieldName][$delta]['#cache']['keys']);
+      $build[$fieldName][$delta]['#view_mode'] = $responsiveImageStyle;
+      if (preg_match('/^(\d+)_(\d+)$/', $responsiveImageStyle, $matches)) {
+        $build[$fieldName][$delta]['#attributes'] = DesignHelper::toAttributeObject($build[$fieldName][$delta]['#attributes'] ?? []);
+        $build[$fieldName][$delta]['#attributes']->addClass("aspect-[{$matches[1]}/{$matches[2]}]");
+      }
+      $build[$fieldName][$delta]['#cache']['keys'][$oldCacheKey] = $responsiveImageStyle;
+    }
+
+
+    if ($build[$fieldName]['#formatter'] == 'responsive_image' &&
+      $oldStyleId = ($build[$fieldName][$delta]['#responsive_image_style_id'] ?? NULL)
+    ) {
+      $build[$fieldName][$delta]['#responsive_image_style_id'] = $responsiveImageStyle;
+      if (preg_match('/^(\d+)_(\d+)$/', $responsiveImageStyle, $matches)) {
+        $build[$fieldName][$delta]['#attributes'] = DesignHelper::toAttributeObject($build[$fieldName][$delta]['#attributes'])->addClass("aspect-[{$matches[1]}/{$matches[2]}]");
+      }
+
+      $oldResponsiveImageStyle = \Drupal::config("responsive_image.styles.{$oldStyleId}");
+      $oldImageStyles = $oldResponsiveImageStyle->get('dependencies.config');
+      array_walk($oldImageStyles, function(&$value) {
+        $value = "config:{$value}";
+      });
+      $oldCacheTags = Cache::mergeTags($oldResponsiveImageStyle->getCacheTags(), $oldImageStyles);
+      $newResponsiveImageStyle = \Drupal::config("responsive_image.styles.{$responsiveImageStyle}");
+      $newImageStyles = $newResponsiveImageStyle->get('dependencies.config');
+      array_walk($newImageStyles, function(&$value) {
+        $value = "config:{$value}";
+      });
+      $newCacheTags = Cache::mergeTags($newResponsiveImageStyle->getCacheTags(), $newImageStyles);
+      $build[$fieldName][$delta]['#cache']['tags'] = array_diff($build[$fieldName][$delta]['#cache']['tags'], $oldCacheTags);
+      $build[$fieldName][$delta]['#cache']['tags'] = Cache::mergeTags($build[$fieldName][$delta]['#cache']['tags'], $newCacheTags);
+    }
+  }
+}
+
+/**
+ * Inject layout_paragraphs context into paragraphs having a twig_field.
+ */
+function designsystem_twig_field_widget_variable_alter(&$options, $alter_context) {
+  $options['Global']['node_from_route'] = 'node_from_route';
+  if ($alter_context['entity_type'] == 'paragraph') {
+    $options['Other']['layout_paragraphs'] = 'layout_paragraphs';
+  }
+}
+
+/**
+ * Inject layout_paragraphs context into paragraphs having a twig_field.
+ */
+function designsystem_twig_field_formatter_variable_alter(&$options, $alter_context) {
+  if ($alter_context['entity_type'] == 'paragraph') {
+    $layoutInfo = _getLayoutInfoForParagraph($options['paragraph']);
+    if (!empty($layoutInfo)) {
+      $options['layout_paragraphs'] = $layoutInfo;
+    }
+  }
+  $route = \Drupal::routeMatch();
+  $node = $route->getParameter('node') ?? $route->getParameter('node_preview');
+  if (is_numeric($node)) {
+    $node = Node::load($node);
+  }
+  if ($node instanceof Node) {
+    $options['node_from_route'] = $node;
+  }
+}
+
+/**
+ * Modify default values of link attributes in link fields.
+ */
+function designsystem_link_attributes_plugin_alter(&$plugins) {
+  unset($plugins['target']['options']['_self']);
+  $plugins['target']['empty_option'] = t('Same window');
+  $plugins['target']['empty_value'] = '';
+  $plugins['target']['options']['_blank'] = t('New window');
+  $plugins['target']['options']['modal'] = t('Lightbox overlay');
+
+  try {
+    $classes = [];
+    $textStyles = \Drupal::config('editor.editor.full_html')->get('settings.plugins.ckeditor5_style.styles');
+    foreach ($textStyles as $style) {
+      if (preg_match('/<a class="([^"]+)">/', $style['element'], $matches)) {
+        if ($matches[1] ?? FALSE) {
+          $classes[$matches[1]] = $style['label'];
+        }
+      }
+    }
+    if (empty($classes)) {
+      throw new \Exception('No button styles found in "full_html" text format.');
+    }
+    $classes['hidden'] = t('Hidden');
+    $plugins['class'] = [
+    'title' => t('Link style'),
+      'type' => 'select',
+      'options' => $classes,
+      'empty_option' => t('Plain link'),
+      'empty_value' => '',
+      // @TODO doesn't work? if if works, differenciate between menu_item_extras and other link fields
+      //'default_value' => key($classes),
+    ];
+  }
+  catch (Exception $e) {
+    \Drupal::logger('designsystem')->warning('Unable to extract link field button styles from "full_html" text format.');
+  }
+}
+
+function designsystem_form_layout_paragraphs_component_form_alter(array &$form, FormStateInterface &$form_state) {
+  _designsystem_form_alter_paragraphs_accordion($form, $form_state);
+}
+
+function _designsystem_form_alter_paragraphs_accordion(array &$form, FormStateInterface &$form_state) {
+  $paragraph = $form['#paragraph'];
+  if ($paragraph->bundle() != 'accordion') {
+    return;
+  }
+  foreach ($form['field_accordion']['widget'] as $idx => $widget) {
+    if (isset($form['field_accordion']['widget'][$idx]['summary']['#attributes'])) {
+      unset($form['field_accordion']['widget'][$idx]['summary']['#attributes']);
+      unset($form['field_accordion']['widget'][$idx]['summary']['#description']);
+      $form['field_accordion']['widget'][$idx]['summary']['#title'] = t('Title') . ' ' .($idx + 1);;
+      $form['field_accordion']['widget'][0]['summary']['#required'] = TRUE;
+      $form['field_accordion']['widget'][$idx]['#title'] = t('Content') . ' ' .($idx + 1);
+      $form['field_accordion']['widget'][$idx]['#title_display'] = 'before';
+    }
+  }
+}
+
+function designsystem_entity_base_field_info_alter(&$fields, EntityTypeInterface $entity_type) {
+  /** @var \Drupal\Core\Field\BaseFieldDefinition[] $fields */
+  if ($entity_type->id() === 'menu_link_content') {
+    $fields['link']->setDisplayConfigurable('form', TRUE);
+    $fields['description']->setDisplayConfigurable('form', TRUE);
+    $fields['weight']->setDisplayConfigurable('form', TRUE);
+    $fields['enabled']->setDisplayConfigurable('form', TRUE);
+    $fields['expanded']->setDisplayConfigurable('form', TRUE);
+  }
+}
+
+function designsystem_theme($existing, $type, $theme, $path) {
+  return [
+    'splidejs_arrows' => [
+      'variables' => [
+        'attributes' => new Attribute(['class' => ['splide__arrows']]),
+        'prev_button_attributes' => new Attribute([
+          'class' => ['splide__arrow', 'splide__arrow--prev'],
+        ]),
+        'next_button_attributes' => new Attribute([
+          'class' => ['splide__arrow', 'splide__arrow--next'],
+        ]),
+      ]
+    ],
+  ];
+}
+
+function designsystem_preprocess_responsive_image(&$variables) {
+  $styleId = $variables['responsive_image_style_id'] ?? '';
+  if (preg_match('/^(\d+)_(\d+)(_.+)?$/', $styleId, $ratios)) {
+    if ($variables['output_image_tag'] ?? FALSE == TRUE) {
+      $variables['img_element']['#attributes'] = DesignHelper::toAttributeObject($variables['img_element']['#attributes'])->addClass("aspect-[{$ratios[1]}/{$ratios[2]}]");
+    }
+    else {
+      $variables['#attributes'] = DesignHelper::toAttributeObject($variables['#attributes'])->addClass("aspect-[{$ratios[1]}/{$ratios[2]}]");
+    }
+  }
+}
+
+function designsystem_theme_suggestions_node_alter(array &$suggestions, array $variables) {
+  /** @var $node \Drupal\node\NodeInterface */
+  $node = $variables['elements']['#node'];
+  $viewMode = $variables['elements']['#view_mode'];
+  if (empty($viewMode) ||
+    strpos($viewMode, 'banner') !== 0 ||
+    !($node instanceof NodeInterface)
+  ) {
+    return;
+  }
+  // all node view modes starting with "banner" are considered hero banners
+  // placed as ctools/entity_view block in block layout
+  $bundle = $node->bundle();
+  $bundleSuggestionPosition = array_search("node__{$bundle}", $suggestions);
+  $bannerSuggestions = ["node__bannerblock", "node__bannerblock__{$viewMode}"];
+  array_splice($suggestions, $bundleSuggestionPosition+1, 0, $bannerSuggestions);
+}
+
+function designsystem_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  if ($form_state->getFormObject() instanceof EntityFormInterface &&
+    $form_state->getFormObject()->getEntity() instanceof NodeInterface
+  ) {
+    _node_form_show_bannertext_field_by_banner_viewmode($form, $form_state, $form_id);
+  }
+}
+
+
+/**
+ * The banner text field is only used when banner size "banner_text" is selected.
+ */
+function _node_form_show_bannertext_field_by_banner_viewmode(&$form, FormStateInterface $form_state, $form_id) {
+  if (!isset($form['field_banner_text']) || !isset($form['field_banner_viewmode'])) {
+    return;
+  }
+  $form['field_banner_text']['#states'] = [
+    'visible' => [
+      'select[name="field_banner_viewmode[0][value]"]' => ['value' => 'banner_text']
+    ]
+  ];
+}

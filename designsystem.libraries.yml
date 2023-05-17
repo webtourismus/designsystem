@@ -1,0 +1,32 @@
+aos:
+  version: 2.3.4
+  js:
+    '../../../libraries/aos/dist/aos.js': {}
+    'js/aos.js': {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+    - core/once
+
+masonry:
+  version: 4.2.2
+  js:
+    '../../../libraries/masonry/dist/masonry.pkgd.min.js': { minified: true }
+    'js/masonry.js': {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+    - core/once
+
+splide:
+  version: 4.1.4
+  css:
+    theme:
+      '../../../libraries/splide/dist/css/splide-core.min.css': {}
+  js:
+    '../../../libraries/splide/dist/js/splide.js': {}
+    'js/splide.js': {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+    - core/once

@@ -1,0 +1,11 @@
+name: Webtourismus Design System
+type: module
+package: Design system
+description: Base module for layouting and theming pages in Webtourismus projects.
+core_version_requirement: ^10
+dependencies:
+  - drupal:breakpoint
+  - field_group:field_group
+  - layout_paragraphs:layout_paragraphs
+  - tailwind_jit:tailwind_jit
+  - twig_tweak:twig_tweak

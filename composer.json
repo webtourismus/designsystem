@@ -1,0 +1,15 @@
+{
+  "name": "webtourismus/designsystem",
+  "description": "Base module for layouting and theming pages in Webtourismus Drupal projects.",
+  "type": "drupal-module",
+  "license": "GPL-2.0-or-later",
+  "authors": [
+    {
+      "name": "Reinhard Hutter",
+      "email": "reinhard.hutter@webtourismus.at"
+    }
+  ],
+  "require": {
+    "drupal/core": "^10"
+  }
+}
