@@ -1,0 +1,30 @@
+div.responsive-table-wrapper {
+  position: relative;
+  width: 100%;
+  overflow: auto;
+}
+div.responsive-table-wrapper::-webkit-scrollbar {
+  height: 6px;
+}
+div.responsive-table-wrapper::-webkit-scrollbar-thumb {
+  background-color: rgba(var(--rgb-color-foreground) / 0.2);
+}
+div.responsive-table-wrapper::-webkit-scrollbar-track {
+  background-color: rgba(var(--rgb-color-foreground) / 0.05);
+}
+table.table-responsive {
+  width: 100%;
+}
+table.table-responsive th, table.table-responsive td {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+table.table-responsive th:first-child, table.table-responsive td:first-child {
+  width: 100%;
+}
+table.table-responsive tr:nth-child(even) th, table.table-responsive tr:nth-child(even) td {
+  background-color: rgba(var(--rgb-color-foreground) / 0.05);
+}
+table.table-responsive tr:first-child th {
+  background-color: rgba(var(--rgb-color-foreground) / 0.2);
+}

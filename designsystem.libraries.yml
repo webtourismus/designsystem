@@ -1,3 +1,15 @@
+layout_background_image:
+  version: 1.0.0
+  css:
+    theme:
+      'css/layout_background_image.css': {}
+
+responsive_table:
+  version: 1.0.0
+  css:
+    theme:
+      'css/responsive_table.css': {}
+
 aos:
   version: 2.3.4
   js:
@@ -8,11 +20,33 @@ aos:
     - core/drupalSettings
     - core/once
 
+flatpickr:
+  version: 4.6.13
+  css:
+    theme:
+      '../../../libraries/flatpickr/dist/flatpickr.min.css': {external: true, minified: true}
+      'css/flatpickr.css': {}
+  js:
+    '../../../libraries/flatpickr/dist/flatpickr.min.js': {external: true, minified: true}
+    '../../../libraries/flatpickr/dist/l10n/de.js': {external: true, minified: true}
+
+glightbox:
+  version: 3.2.0
+  css:
+    theme:
+      '../../../libraries/glightbox/dist/css/glightbox.min.css': {}
+  js:
+    '../../../libraries/glightbox/dist/js/glightbox.min.js': {}
+    'js/glightbox.js': {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+    - core/once
+
 masonry:
   version: 4.2.2
   js:
     '../../../libraries/masonry/dist/masonry.pkgd.min.js': { minified: true }
-    'js/masonry.js': {}
   dependencies:
     - core/drupal
     - core/drupalSettings
@@ -22,9 +56,9 @@ splide:
   version: 4.1.4
   css:
     theme:
-      '../../../libraries/splide/dist/css/splide-core.min.css': {}
+      '../../../libraries/splidejs/dist/css/splide-core.min.css': {}
   js:
-    '../../../libraries/splide/dist/js/splide.js': {}
+    '../../../libraries/splidejs/dist/js/splide.js': {}
     'js/splide.js': {}
   dependencies:
     - core/drupal

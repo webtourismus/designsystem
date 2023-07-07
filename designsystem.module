@@ -17,15 +17,15 @@ use Drupal\layout_paragraphs\LayoutParagraphsComponent;
 use Drupal\Core\Template\Attribute;
 use Drupal\node\NodeInterface;
 use Drupal\Core\Entity\EntityFormInterface;
+use Drupal\block\Entity\Block;
 
 /**
  * Note that the default template variables are statically cached within a
  * request.
  *
  * This function is invoked by global template_process() and therefore
- * available in all templates. Note that the default template variables are
- * statically cached within a request. Do not use for variables that might
- * change within a request.
+ * available in all templates. Do not use for variables that might
+ * change within a request (due caching).
  */
 function designsystem_template_preprocess_default_variables_alter(&$variables): void {
   $variables['is_admin_user'] = \Drupal::currentUser()
@@ -94,7 +94,7 @@ function designsystem_preprocess_html(&$variables): void {
     $variables['html_attributes']->addClass("views");
     $variables['html_attributes']->addClass("views--id--{$view}");
     $variables['html_attributes']->addClass("views--display--{$display}");
-    $variables['html_attributes']->addClass("views--{{ $view }}--{{ $display }}");
+    $variables['html_attributes']->addClass("views--{$view}--{$display}");
   }
 }
 
@@ -110,19 +110,60 @@ function designsystem_preprocess_page(&$variables):void {
   }
 }
 
-function designsystem_preprocess_node(&$variables):void {
-  /** @var $node \Drupal\node\NodeInterface */
-  $node = $variables['node'];
+function designsystem_preprocess_region(array &$variables):void {
   $variables['attributes'] = DesignHelper::toAttributeObject($variables['attributes'] ?? []);
-  $variables['attributes']->addClass("node");
-  $variables['attributes']->addClass("node--id--{$node->id()}");
-  $variables['attributes']->addClass("node--type--{$node->bundle()}");
-  $viewMode = $variables['view_mode'];
-  $variables['attributes']->addClass("node--view-mode--{$viewMode}");
+  $variables['attributes']->addClass('region');
+  $variables['attributes']->addClass("region--{$variables['region']}");
+}
 
-  if ($viewMode != 'full' || \Drupal::routeMatch()->getParameter('node') === $node) {
-    return;
+
+function designsystem_preprocess_block(&$variables):void {
+  $blockId = NULL;
+  if (isset($variables['elements']['#id'])) {
+    $blockId = $variables['elements']['#id'];
   }
+  $blockConfig = Block::load($blockId);
+  $region = $blockConfig?->getRegion();
+
+  $variables['attributes'] = DesignHelper::toAttributeObject($variables['attributes'] ?? []);
+  $variables['attributes']->addClass('block');
+  $variables['attributes']->addClass("block--id--{$blockId}");
+  $variables['attributes']->addClass("block--region--{$region}");
+
+  $variables['title_attributes'] = DesignHelper::toAttributeObject($variables['title_attributes'] ?? []);
+  $variables['title_attributes']->addClass('block-title');
+  $variables['title_attributes']->addClass("block-title--id--{$blockId}");
+  $variables['title_attributes']->addClass("block-title--region--{$region}");
+
+  $basePluginId = $variables['base_plugin_id'];
+  $variables['attributes']->addClass("block--plugin--{$basePluginId}");
+
+  if ($basePluginId == 'system_menu_block') {
+    $variables['attributes']->addClass("nav");
+    $variables['attributes']->addClass("nav--{$variables['derivative_plugin_id']}");
+  }
+
+  if (isset($variables['elements']['content']['#block_content']) &&
+    $variables['elements']['content']['#block_content'] instanceof ContentEntityInterface
+  ) {
+    $variables['block_content'] = $variables['elements']['content']['#block_content'];
+    $variables['#view_mode'] = $variables['elements']['content']['#view_mode'];
+    _designsystem_preprocess__content_entity($variables, $variables['block_content']);
+  }
+}
+
+function _designsystem_preprocess__content_entity(array &$variables, ContentEntityInterface $entity): void {
+  $variables['attributes'] = DesignHelper::toAttributeObject($variables['attributes'] ?? []);
+  $variables['attributes']->addClass($entity->getEntityTypeId());
+  $variables['attributes']->addClass("{$entity->getEntityTypeId()}--id--{$entity->id()}");
+  $variables['attributes']->addClass("{$entity->getEntityTypeId()}--type--{$entity->bundle()}");
+  $viewMode = $variables['#view_mode'] ?? 'default';
+  $variables['attributes']->addClass("{$entity->getEntityTypeId()}--view-mode--{$viewMode}");
+}
+
+
+function designsystem_preprocess_node(&$variables):void {
+  _designsystem_preprocess__content_entity($variables, $variables['node']);
 }
 
 /**
@@ -145,6 +186,13 @@ function designsystem_preprocess_layout(&$variables): void {
     $variables['content']['#attributes'] ??
     []
   );
+  foreach($variables['content'] as $key => $item) {
+    if (!str_starts_with($key, '#') || !is_array($item) || empty($variables['content'][$key]['#layout_background_image'])) {
+      continue;
+    }
+    $variables[substr($key, 1)] = $variables['content'][$key];
+  }
+
   _designsystem_preprocess_layout__add_default_classes($variables);
 }
 
@@ -155,21 +203,27 @@ function _designsystem_preprocess_layout__add_default_classes(&$variables): void
   $layoutDefinition = $variables['layout'];
   $layoutName = $layoutDefinition->id();
   $variables['bg_wrapper_attributes']->addClass('bg-wrapper');
-  $variables['bg_wrapper_attributes']->addClass("bg-wrapper-{$layoutName}");
+  $variables['bg_wrapper_attributes']->addClass("bg-wrapper--{$layoutName}");
   $variables['width_wrapper_attributes']->addClass('width-wrapper');
-  $variables['width_wrapper_attributes']->addClass("width-wrapper-{$layoutName}");
+  $variables['width_wrapper_attributes']->addClass("width-wrapper--{$layoutName}");
   $variables['attributes']->addClass('layout');
-  $variables['attributes']->addClass("layout-{$layoutName}");
+  $variables['attributes']->addClass("layout--{$layoutName}");
   $layoutParagraphId = $variables['settings']['layout_paragraphs_section']?->getEntity()?->id();
   if ($layoutParagraphId) {
-    $variables['bg_wrapper_attributes']->addClass("paragraph--id--{$layoutParagraphId}");
+    $helperReplicateParagraphClasses = [];
+    _designsystem_preprocess__content_entity(
+      $helperReplicateParagraphClasses,
+      $variables['settings']['layout_paragraphs_section']->getEntity()
+    );
+    $variables['bg_wrapper_attributes']->addClass(...$helperReplicateParagraphClasses['attributes']['class']);
+    unset($helperReplicateParagraphClasses);
   }
 
   foreach ($variables['region_attributes'] as $regionName => $attributeObject) {
     $variables['region_attributes'][$regionName]->addClass('area');
-    $variables['region_attributes'][$regionName]->addClass("area-{$layoutName}");
-    $variables['region_attributes'][$regionName]->addClass("area-{$regionName}");
-    $variables['region_attributes'][$regionName]->addClass("area-{$layoutName}-{$regionName}");
+    $variables['region_attributes'][$regionName]->addClass("area--{$layoutName}");
+    $variables['region_attributes'][$regionName]->addClass("area--{$regionName}");
+    $variables['region_attributes'][$regionName]->addClass("area--{$layoutName}--{$regionName}");
   }
 }
 
@@ -179,8 +233,7 @@ function _designsystem_preprocess_layout__add_default_classes(&$variables): void
  */
 function designsystem_preprocess_paragraph(&$variables): void {
   $paragraph = $variables['paragraph'];
-  $variables['attributes'] = DesignHelper::toAttributeObject($variables['attributes'] ?? []);
-  $variables['attributes']->addClass("paragraph--id--" . $paragraph->id());
+  _designsystem_preprocess__content_entity($variables, $paragraph);
   _designsystem_preprocess_paragraph__add_layout_info($variables);
 }
 
@@ -199,11 +252,11 @@ function _designsystem_preprocess_paragraph__add_layout_info(&$variables): void 
     // When adding nested paragraphs into newly created layouts,
     // the lookup might not yet work before saving it the first time.
     $layout = $layoutInfo['layout'] ?? 'LAYOUT_NOT_YET_PERSISTED';
-    $variables['attributes']->addClass("component-{$layout}");
+    $variables['attributes']->addClass("component--{$layout}");
     $region = $layoutInfo['region'] ?? NULL;
     if ($region) {
-      $variables['attributes']->addClass("component-{$region}");
-      $variables['attributes']->addClass("component-{$layout}-{$region}");
+      $variables['attributes']->addClass("component--{$region}");
+      $variables['attributes']->addClass("component--{$layout}--{$region}");
     }
   }
 }
@@ -244,6 +297,19 @@ function _getLayoutInfoForParagraph(Paragraph $paragraph):array {
   }
   return $result;
 }
+
+function designsystem_preprocess_field(&$variables, $hook): void {
+  $entity = $variables['element']['#object'];
+  $variables['attributes'] = DesignHelper::toAttributeObject($variables['attributes'] ?? []);
+  $variables['attributes']->addClass("field--entity--" . $variables['entity_type']);
+  $variables['attributes']->addClass("field--bundle--" . $entity->bundle());
+  $variables['attributes']->addClass("field--name--" . $variables['field_name']);
+  $variables['attributes']->addClass("field--type--" . $variables['field_type']);
+  $viewMode = $variables['element']['#view_mode'];
+  $variables['attributes']->addClass("field--view-mode--{$viewMode}");
+}
+
+
 
 function designsystem_entity_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
   // Order of invoking function calls matters here: Build data must be generated first,
@@ -398,6 +464,7 @@ function designsystem_link_attributes_plugin_alter(&$plugins) {
 }
 
 function designsystem_form_layout_paragraphs_component_form_alter(array &$form, FormStateInterface &$form_state) {
+  _designsystem_form_alter_paragraphs_inline_style_options($form, $form_state);
   _designsystem_form_alter_paragraphs_accordion($form, $form_state);
 }
 
@@ -410,12 +477,42 @@ function _designsystem_form_alter_paragraphs_accordion(array &$form, FormStateIn
     if (isset($form['field_accordion']['widget'][$idx]['summary']['#attributes'])) {
       unset($form['field_accordion']['widget'][$idx]['summary']['#attributes']);
       unset($form['field_accordion']['widget'][$idx]['summary']['#description']);
-      $form['field_accordion']['widget'][$idx]['summary']['#title'] = t('Title') . ' ' .($idx + 1);;
+      $form['field_accordion']['widget'][$idx]['summary']['#title'] = t('Title') . ' ' .($idx + 1);
       $form['field_accordion']['widget'][0]['summary']['#required'] = TRUE;
       $form['field_accordion']['widget'][$idx]['#title'] = t('Content') . ' ' .($idx + 1);
       $form['field_accordion']['widget'][$idx]['#title_display'] = 'before';
     }
   }
+}
+/**
+ * Converts style options from an detail set on top of form to inline fields at the end of the form
+ */
+function _designsystem_form_alter_paragraphs_inline_style_options(array &$form, FormStateInterface &$form_state) {
+  $paragraph = $form['#paragraph'];
+  if (!isset($paragraph->getAllBehaviorSettings()['inline_style_options'])) {
+    return;
+  }
+  $form['behavior_plugins']['#weight'] = 9999;
+  $form['behavior_plugins']['#type'] = 'container';
+
+  _designsystem_form_alter_paragraphs_inline_style_options_gallery($form, $form_state);
+}
+
+/**
+ * Hide behavior settings for gallery form if slider mode is selected
+ */
+function _designsystem_form_alter_paragraphs_inline_style_options_gallery(array &$form, FormStateInterface &$form_state) {
+  $paragraph = $form['#paragraph'];
+  if ($paragraph->bundle() != 'gallery') {
+    return;
+  }
+  $form['behavior_plugins']['#states'] = [
+    'invisible' => [
+      ($form['#id'] ?? '') . ':input[name="field_viewmode[0][value]"]' => [
+        'value' => 'slider'
+      ]
+    ]
+  ];
 }
 
 function designsystem_entity_base_field_info_alter(&$fields, EntityTypeInterface $entity_type) {
@@ -497,3 +594,4 @@ function _node_form_show_bannertext_field_by_banner_viewmode(&$form, FormStateIn
     ]
   ];
 }
+

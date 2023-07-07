@@ -176,5 +176,6 @@ class StyleOptionsLayout extends StyleOptionLayoutPlugin {
       $instance->setValues($values);
       return $instance->build($build, $region_id);
     }
+    return[];
   }
 }

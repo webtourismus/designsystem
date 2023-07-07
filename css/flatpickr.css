@@ -1,0 +1,4 @@
+/* flatpickr uses ".hidden" for "visibility: hidden;", this clashes with ".hidden" from TailwindCSS */
+span.flatpickr-day.hidden {
+  display: unset;
+}

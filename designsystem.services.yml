@@ -5,3 +5,7 @@ services:
     decorates: layout.icon_builder
     class: Drupal\designsystem\DesignSystemLayoutIconBuilder
     shared: false
+  designsystem.twig.add_to_svg:
+    class: Drupal\designsystem\Twig\AddToSvg
+    tags:
+      - { name: twig.extension }

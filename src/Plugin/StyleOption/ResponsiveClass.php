@@ -238,7 +238,8 @@ class ResponsiveClass extends StyleOptionPluginBase {
     $twigAttributeVariableName = $this->getConfiguration('twig_attribute_object') ?? '#attributes';
     $build[$twigAttributeVariableName] = $this->designHelper->toAttributeObject($build[$twigAttributeVariableName] ?? []);
 
-    $build[$twigAttributeVariableName]->setAttribute('data-responsive-class-prefix', $prefix);
+    $id = str_replace('_', '-', $this->getOptionId());
+    $build[$twigAttributeVariableName]->setAttribute("data-responsive-{$id}", $prefix);
 
     $prefixOptions = $this->getConfiguration('prefix')['options'] ?? $this::DEFAULT_RESPONSIVE_OPTIONS;
     if (is_array($prefixOptions)) {
