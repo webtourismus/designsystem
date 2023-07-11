@@ -301,6 +301,7 @@ function _getLayoutInfoForParagraph(Paragraph $paragraph):array {
 function designsystem_preprocess_field(&$variables, $hook): void {
   $entity = $variables['element']['#object'];
   $variables['attributes'] = DesignHelper::toAttributeObject($variables['attributes'] ?? []);
+  $variables['attributes']->addClass("field");
   $variables['attributes']->addClass("field--entity--" . $variables['entity_type']);
   $variables['attributes']->addClass("field--bundle--" . $entity->bundle());
   $variables['attributes']->addClass("field--name--" . $variables['field_name']);
@@ -464,7 +465,6 @@ function designsystem_link_attributes_plugin_alter(&$plugins) {
 }
 
 function designsystem_form_layout_paragraphs_component_form_alter(array &$form, FormStateInterface &$form_state) {
-  _designsystem_form_alter_paragraphs_inline_style_options($form, $form_state);
   _designsystem_form_alter_paragraphs_accordion($form, $form_state);
 }
 
@@ -483,36 +483,6 @@ function _designsystem_form_alter_paragraphs_accordion(array &$form, FormStateIn
       $form['field_accordion']['widget'][$idx]['#title_display'] = 'before';
     }
   }
-}
-/**
- * Converts style options from an detail set on top of form to inline fields at the end of the form
- */
-function _designsystem_form_alter_paragraphs_inline_style_options(array &$form, FormStateInterface &$form_state) {
-  $paragraph = $form['#paragraph'];
-  if (!isset($paragraph->getAllBehaviorSettings()['inline_style_options'])) {
-    return;
-  }
-  $form['behavior_plugins']['#weight'] = 9999;
-  $form['behavior_plugins']['#type'] = 'container';
-
-  _designsystem_form_alter_paragraphs_inline_style_options_gallery($form, $form_state);
-}
-
-/**
- * Hide behavior settings for gallery form if slider mode is selected
- */
-function _designsystem_form_alter_paragraphs_inline_style_options_gallery(array &$form, FormStateInterface &$form_state) {
-  $paragraph = $form['#paragraph'];
-  if ($paragraph->bundle() != 'gallery') {
-    return;
-  }
-  $form['behavior_plugins']['#states'] = [
-    'invisible' => [
-      ($form['#id'] ?? '') . ':input[name="field_viewmode[0][value]"]' => [
-        'value' => 'slider'
-      ]
-    ]
-  ];
 }
 
 function designsystem_entity_base_field_info_alter(&$fields, EntityTypeInterface $entity_type) {
@@ -547,9 +517,13 @@ function designsystem_preprocess_responsive_image(&$variables) {
   if (preg_match('/^(\d+)_(\d+)(_.+)?$/', $styleId, $ratios)) {
     if ($variables['output_image_tag'] ?? FALSE == TRUE) {
       $variables['img_element']['#attributes'] = DesignHelper::toAttributeObject($variables['img_element']['#attributes'])->addClass("aspect-[{$ratios[1]}/{$ratios[2]}]");
+      $variables['img_element']['#attributes']->removeAttribute('width');
+      $variables['img_element']['#attributes']->removeAttribute('height');
     }
     else {
       $variables['#attributes'] = DesignHelper::toAttributeObject($variables['#attributes'])->addClass("aspect-[{$ratios[1]}/{$ratios[2]}]");
+      $variables['#attributes']->removeAttribute('width');
+      $variables['#attributes']->removeAttribute('height');
     }
   }
 }

@@ -92,7 +92,7 @@ class StyleOptionsLayout extends StyleOptionLayoutPlugin {
       foreach ($region_definitions as $region_id => $definitions) {
         $element[$region_id] = [
           '#type' => 'details',
-          '#title' => $regions[$region_id]['label'],
+          '#title' => $this->t((string)$regions[$region_id]['label']),
           '#group' => $group,
         ];
         foreach (array_keys($definitions) as $option_id) {
@@ -124,6 +124,7 @@ class StyleOptionsLayout extends StyleOptionLayoutPlugin {
   public function build(array $regions) {
     // This is not a static call. Think of it as a "grandparent::build()",
     // having a "$this" context like a "parent::build()".
+    // phpcs:ignore
     $build = LayoutDefault::build($regions);
 
     $layout_definition_ids = array_keys($this->getLayoutContextDefinition());

@@ -82,15 +82,18 @@ class HtmlAttribute extends StyleOptionPluginBase {
 
     $form['html_attribute'] = [
       '#type' => $this->getConfiguration('input_type') ?? 'textfield',
-      '#title' => $this->getLabel(),
+      '#title' => $this->getLabel() ? $this->t($this->getLabel()) : NULL,
       '#default_value' => $this->getValue('html_attribute') ?? $this->getDefaultValue(),
-      '#description' => $this->getConfiguration('description'),
+      '#description' => $this->getConfiguration('description') ? $this->t((string)$this->getConfiguration('description')) : NULL,
       '#required' => $this->getConfiguration('required'),
     ];
     if ($this->hasConfiguration('form_api')) {
       $formApiParameters = $this->getConfiguration('form_api');
       if (is_array($formApiParameters)) {
         foreach ($formApiParameters as $hashParameter => $formApiParameter) {
+          if ($hashParameter == '#empty_option') {
+            $formApiParameter = $this->t($formApiParameter);
+          }
           $form['html_attribute'][$hashParameter] = $formApiParameter;
         }
       }

@@ -1,0 +1,41 @@
+{% set container_classes = [
+  'cs-darkimg'
+] %}
+{% set prev_button_classes = [
+  'absolute',
+  'left-0',
+  'top-1/2',
+  '-translate-y-1/2',
+  'z-10',
+  'cursor-pointer',
+  'hocus:scale-125',
+  'transition',
+] %}
+{% set next_button_classes = [
+  'absolute',
+  'right-0',
+  'top-1/2',
+  '-translate-y-1/2',
+  'z-10',
+  'cursor-pointer',
+  'hocus:scale-125',
+  'transition',
+] %}
+{% block container %}
+  <div {{ attributes.addClass(container_classes) }}>
+    {% block prev_button %}
+      <button {{ prev_button_attributes.addClass(prev_button_classes) }}>
+        {% block prev_icon %}
+          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ stroke_width|default(2) }}" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        {% endblock %}
+      </button>
+    {% endblock %}
+    {% block next_button %}
+      <button {{ next_button_attributes.addClass(next_button_classes) }}>
+        {% block next_icon %}
+          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ stroke_width|default(2) }}" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        {% endblock %}
+      </button>
+    {% endblock %}
+  </div>
+{% endblock %}

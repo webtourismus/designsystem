@@ -88,11 +88,11 @@ class ResponsiveClass extends StyleOptionPluginBase {
 
     $containerTitle = NULL;
     if ($title = $this->getConfiguration('label')) {
-      $containerTitle = Markup::create('<label class="form-item__label">' . $title . '</label>');
+      $containerTitle = Markup::create('<label class="form-item__label">' . $this->t((string)$title)->render() . '</label>');
     }
     $containerDescription = NULL;
     if ($desc = $this->getConfiguration('description')) {
-      $containerDescription = Markup::create('<div class="form-item__description">' . $desc . '</div>');
+      $containerDescription = Markup::create('<div class="form-item__description">' . $this->t((string)$desc)->render() . '</div>');
     }
     $form['responsive_class'] = [
       '#type' => 'container',
@@ -121,7 +121,7 @@ class ResponsiveClass extends StyleOptionPluginBase {
 
     $form['responsive_class']['prefix'] = [
       '#type' => 'select',
-      '#title' => $this->getConfiguration('prefix')['label'] ?? NULL,
+      '#title' => $this->getConfiguration('prefix')['label'] ? $this->t($this->getConfiguration('prefix')['label']) : NULL,
       '#default_value' => $this->getValue('responsive_class_prefix') ?? $this->getConfiguration('prefix')['default'] ?? NULL,
       '#description' => $this->getConfiguration('prefix')['description'] ?? NULL,
     ];

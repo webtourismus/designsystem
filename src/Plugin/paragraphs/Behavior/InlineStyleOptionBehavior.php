@@ -12,7 +12,7 @@ use Drupal\style_options\Plugin\paragraphs\Behavior\StyleOptionBehavior;
  * @ParagraphsBehavior(
  *   id = "inline_style_options",
  *   label = @Translation("Style Options (inline)"),
- *   description = @Translation("Integrates paragraphs with Style Options. Renders them inline with content fields. Doesn't work with LP, also see issue 2928759"),
+ *   description = @Translation("Integrates paragraphs with Style Options. Renders them inline below content fields. See issue 2928759"),
  *   weight = 0
  * )
  */
