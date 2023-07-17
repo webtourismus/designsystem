@@ -568,4 +568,3 @@ function _node_form_show_bannertext_field_by_banner_viewmode(&$form, FormStateIn
     ]
   ];
 }
-
