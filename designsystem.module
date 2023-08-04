@@ -62,6 +62,7 @@ function designsystem_preprocess_html(&$variables): void {
   if (is_numeric($node)) {
     $node = Node::load($node);
   }
+  $variables['html_attributes']->addClass('node--no-banner');
   if ($node instanceof Node) {
     $variables['node'] = $node;
     $variables['html_attributes']->addClass('node');
@@ -72,9 +73,9 @@ function designsystem_preprocess_html(&$variables): void {
     $variables['html_attributes']->addClass("node--view-mode--{$viewMode}");
 
     if (!$node->hasField('field_banner') || $node->get('field_banner')?->isEmpty()) {
-      $variables['html_attributes']->addClass('node--no-banner');
       return;
     }
+    $variables['html_attributes']->removeClass('node--no-banner');
     $variables['html_attributes']->addClass('node--has-banner');
     if (!$node->hasField('field_banner_viewmode') || $node->get('field_banner_viewmode')?->isEmpty()) {
       return;
