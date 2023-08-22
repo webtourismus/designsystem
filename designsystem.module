@@ -309,6 +309,11 @@ function designsystem_preprocess_field(&$variables, $hook): void {
   $variables['attributes']->addClass("field--type--" . $variables['field_type']);
   $viewMode = $variables['element']['#view_mode'];
   $variables['attributes']->addClass("field--view-mode--{$viewMode}");
+
+  // provided same styles for running text in editing mode and all themes
+  if (in_array($variables['field_type'], ['text', 'text_long', 'text_with_summary',])) {
+    $variables['attributes']->addClass('ck-content');
+  }
 }
 
 
