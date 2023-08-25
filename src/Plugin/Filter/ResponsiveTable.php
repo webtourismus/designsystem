@@ -24,7 +24,7 @@ class ResponsiveTable extends FilterBase {
     $wrapper->setAttribute('class', 'responsive-table-wrapper');
 
     /** @var  $element \DOMNode */
-    foreach ($xpath->query("//table[contains(@class, 'table-responsive')]") as $element) {
+    foreach ($xpath->query("//table[contains(@class, 'responsive-table')]") as $element) {
       $clonedWrapper = $wrapper->cloneNode();
       $element->parentNode->replaceChild($clonedWrapper, $element);
       $clonedWrapper->appendChild($element);

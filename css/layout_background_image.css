@@ -1,5 +1,5 @@
-.field--view-mode--layout_bg {
-  z-index: -1;
+.field--view-mode--layout_bg ~ * {
+  position: relative;
 }
 .field--view-mode--layout_bg, .field--view-mode--layout_bg > picture {
   display: block;

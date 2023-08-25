@@ -1,6 +1,7 @@
 div.responsive-table-wrapper {
   position: relative;
   width: 100%;
+  max-width: 100%;
   overflow: auto;
 }
 div.responsive-table-wrapper::-webkit-scrollbar {
@@ -12,19 +13,19 @@ div.responsive-table-wrapper::-webkit-scrollbar-thumb {
 div.responsive-table-wrapper::-webkit-scrollbar-track {
   background-color: rgba(var(--rgb-color-foreground) / 0.05);
 }
-table.table-responsive {
+table.responsive-table {
   width: 100%;
 }
-table.table-responsive th, table.table-responsive td {
+table.responsive-table th, table.responsive-table td {
   white-space: nowrap;
   vertical-align: middle;
 }
-table.table-responsive th:first-child, table.table-responsive td:first-child {
+table.responsive-table th:first-child, table.responsive-table td:first-child {
   width: 100%;
 }
-table.table-responsive tr:nth-child(even) th, table.table-responsive tr:nth-child(even) td {
+table.responsive-table tr:nth-child(even) th, table.responsive-table tr:nth-child(even) td {
   background-color: rgba(var(--rgb-color-foreground) / 0.05);
 }
-table.table-responsive tr:first-child th {
+table.responsive-table tr:first-child th {
   background-color: rgba(var(--rgb-color-foreground) / 0.2);
 }
