@@ -1,0 +1,55 @@
+@media (prefers-reduced-motion: no-preference) {
+  :where(html:not(.no-js)) [data-aos^='fade'],
+  :where(html:not(.no-js)) [data-aos^='zoom'],
+  :where(html:not(.no-js) [data-aos='children-sideward']) > :first-child,
+  :where(html:not(.no-js) [data-aos='children-sideward']) > :last-child {
+    opacity: 0;
+    transition-property: opacity, transform;
+    transition-duration: 1000ms;
+    pointer-events: none;
+  }
+  [data-aos='fade-up'] {
+    transform: translate(0, 100px);
+  }
+  [data-aos='fade-down'] {
+    transform: translate(0, -100px);
+  }
+  [data-aos='fade-left'] {
+    transform: translate(100px, 0);
+  }
+  [data-aos='fade-right'] {
+    transform: translate(-100px, 0);
+  }
+  :where([data-aos='children-sideward']) > :first-child {
+    transform: translate(-100px, 0);
+  }
+  :where([data-aos='children-sideward']) > :last-child {
+    transform: translate(100px, 0);
+  }
+  [data-aos='zoom-in'] {
+    transform: scale(.8);
+  }
+  :where([data-aos^='fade']).aos-animate,
+  :where([data-aos^='zoom']).aos-animate,
+  :where([data-aos='children-sideward'].aos-animate) > :first-child,
+  :where([data-aos='children-sideward'].aos-animate) > :last-child {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+    pointer-events: auto;
+  }
+}
+@media (prefers-reduced-motion) {
+  [data-aos^='fade'],
+  [data-aos^='zoom'],
+  :where([data-aos='children-sideward']) > :first-child,
+  :where([data-aos='children-sideward']) > :last-child {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+}
+.is-backend [data-aos], .is-backend [data-aos="children-sideward"] > *{
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}

@@ -12,6 +12,9 @@ responsive_table:
 
 aos:
   version: 2.3.4
+  css:
+    theme:
+      'css/aos.css': {}
   js:
     '../../../libraries/aos/dist/aos.js': {}
     'js/aos.js': {}

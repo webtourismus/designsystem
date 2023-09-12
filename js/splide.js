@@ -14,6 +14,8 @@
             } catch (e) {/*silent fail*/}
           });
           splideInstance.mount();
+          let ev = new CustomEvent('splide:mounted', {detail: {splide: splideInstance}});
+          document.dispatchEvent(ev);
         });
       }
     }
