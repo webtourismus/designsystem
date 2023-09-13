@@ -1,11 +1,11 @@
 layout_background_image:
-  version: 1.0.0
+  version: 1.1.8
   css:
     theme:
       'css/layout_background_image.css': {}
 
 responsive_table:
-  version: 1.0.0
+  version: 1.1.8
   css:
     theme:
       'css/responsive_table.css': {}
