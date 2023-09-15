@@ -6,7 +6,6 @@ namespace Drupal\designsystem\Plugin\StyleOption;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
-use Drupal\designsystem\DesignHelper;
 use Drupal\style_options\Plugin\StyleOptionPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -48,7 +47,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   # E.g. if the user selected "md" as overwrite prefix, and "flex basis-1/2" as overwrite class,
  *   # then the following example would also render this classes: "max-sm:block max-sm:w-full".
  *   # (Classes already containing a responsive prefix will be rendered unmodified.)
- *   otherwise_classes: 'block w-full'
+ *   otherwise_classes: 'display-block w-full'
  * @endcode
  *
  * @StyleOption(
@@ -64,7 +63,7 @@ class ResponsiveClass extends StyleOptionPluginBase {
   protected $designHelper;
 
   /**
-   * @TODO: examine if these options can be dynamically extracted from the "tailwind.config.js"
+   * Default responsive options used if "prefix" options are missing
    */
   const DEFAULT_RESPONSIVE_OPTIONS = [
     'sm' => 'tablet portrait',
@@ -223,8 +222,6 @@ class ResponsiveClass extends StyleOptionPluginBase {
     $this->setValues($values);
   }
 
-
-
   /**
    * {@inheritDoc}
    */
@@ -273,6 +270,9 @@ class ResponsiveClass extends StyleOptionPluginBase {
 
     if ($preg_replace = $this->getConfiguration('value_preg_replace')) {
       $value = preg_replace($preg_replace['pattern'], $preg_replace['replacement'], $value, $preg_replace['limit'] ?? -1);
+    }
+    if (empty($value)) {
+      $value = 'INVALID_PREG_REPLACE_SUBJECT';
     }
 
     /**

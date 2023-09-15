@@ -138,6 +138,9 @@ class HtmlAttribute extends StyleOptionPluginBase {
     if ($preg_replace = $this->getConfiguration('value_preg_replace')) {
       $value = preg_replace($preg_replace['pattern'], $preg_replace['replacement'], $value, $preg_replace['limit'] ?? -1);
     }
+    if (empty($value)) {
+      $value = 'INVALID_PREG_REPLACE_SUBJECT';
+    }
 
     $twigAttributeVariableName = $this->getConfiguration('twig_attribute_object') ?? '#attributes';
     $build[$twigAttributeVariableName] = $this->designHelper->toAttributeObject($build[$twigAttributeVariableName] ?? []);
