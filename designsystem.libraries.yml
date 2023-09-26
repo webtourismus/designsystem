@@ -1,11 +1,11 @@
 layout_background_image:
-  version: 1.3.0
+  version: 1.3.2
   css:
     theme:
       'css/layout_background_image.css': {}
 
 responsive_table:
-  version: 1.3.0
+  version: 1.3.2
   css:
     theme:
       'css/responsive_table.css': {}
@@ -55,22 +55,15 @@ masonry:
     - core/drupalSettings
     - core/once
 
-splide.library:
-  header: true
+splide:
   version: 4.1.4
   css:
     theme:
       '../../../libraries/splidejs/dist/css/splide-core.min.css': {}
   js:
     '../../../libraries/splidejs/dist/js/splide.js': {}
-
-splide:
-  version: 1.3.0
-  css:
-  js:
     'js/splide.js': {}
   dependencies:
-    - designsystem/splide.library
     - core/drupal
     - core/drupalSettings
     - core/once
