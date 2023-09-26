@@ -2,7 +2,7 @@
   Drupal.behaviors.splide = {
     attach: function attach(context, settings) {
       if (!drupalSettings.path.currentPathIsAdmin) {
-        once('splide', '.splide', context).forEach(elem => {
+        once('splide', '[data-js-behavior-splide="mount"]', context).forEach(elem => {
           let splideInstance = new Splide(elem);
           splideInstance.on('arrows:mounted arrows:updated', function() {
             try {
