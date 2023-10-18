@@ -158,7 +158,7 @@ function _designsystem_preprocess__content_entity(array &$variables, ContentEnti
   $variables['attributes']->addClass($entity->getEntityTypeId());
   $variables['attributes']->addClass("{$entity->getEntityTypeId()}--id--{$entity->id()}");
   $variables['attributes']->addClass("{$entity->getEntityTypeId()}--type--{$entity->bundle()}");
-  $viewMode = $variables['#view_mode'] ?? 'default';
+  $viewMode = $variables['#view_mode'] ?? $variables['elements']['#view_mode'] ?? 'default';
   $variables['attributes']->addClass("{$entity->getEntityTypeId()}--view-mode--{$viewMode}");
 }
 
