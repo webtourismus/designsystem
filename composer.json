@@ -10,8 +10,6 @@
     }
   ],
   "require": {
-    "drupal/core": "^10",
-    "webtourismus/lucide": "^0.216",
-    "webtourismus/fa6": "^6.4"
+    "drupal/core": "^10"
   }
 }
