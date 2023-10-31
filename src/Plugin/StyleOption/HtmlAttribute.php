@@ -56,7 +56,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @StyleOption(
  *   id = "html_attribute",
- *   label = @Translation("CSS Class")
+ *   label = @Translation("Html attribute")
  * )
  */
 class HtmlAttribute extends StyleOptionPluginBase {
@@ -107,7 +107,24 @@ class HtmlAttribute extends StyleOptionPluginBase {
       if (is_array($options)) {
         foreach ($options as $key => $option) {
           if (is_array($option)) {
-            $options[$key] = $this->t(...$option);
+            if (array_is_list($option)) {
+              $options[$key] = $this->t(...$option);
+            }
+            else {
+              foreach($options[$key] as $optgroupKey => $optGroupValue) {
+                if (is_array($optGroupValue)) {
+                  $options[$key][$optgroupKey] = $this->t(...$optGroupValue);
+                }
+                elseif (is_string($optGroupValue)) {
+                  $options[$key][$optgroupKey] = $this->t($optGroupValue);
+                }
+              }
+              $translatedKey = $this->t($key)->render();
+              if ($translatedKey != $key) {
+                $options[$translatedKey] = $options[$key];
+                unset($options[$key]);
+              }
+            }
           }
           elseif (is_string($option)) {
             $options[$key] = $this->t($option);
