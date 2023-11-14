@@ -1,10 +1,6 @@
 services:
   designsystem.helper:
     class: Drupal\designsystem\DesignHelper
-  designsystem.icon_builer:
-    decorates: layout.icon_builder
-    class: Drupal\designsystem\DesignSystemLayoutIconBuilder
-    shared: false
   designsystem.twig.add_to_svg:
     class: Drupal\designsystem\Twig\AddToSvg
     tags:

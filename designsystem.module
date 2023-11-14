@@ -307,7 +307,7 @@ function designsystem_preprocess_field(&$variables, $hook): void {
   $variables['attributes']->addClass("field--bundle--" . $entity->bundle());
   $variables['attributes']->addClass("field--name--" . $variables['field_name']);
   $variables['attributes']->addClass("field--type--" . $variables['field_type']);
-  $viewMode = $variables['element']['#view_mode'];
+  $viewMode = DesignHelper::getRealViewmode($variables);
   $variables['attributes']->addClass("field--view-mode--{$viewMode}");
 
   // provided same styles for running text in editing mode and all themes
