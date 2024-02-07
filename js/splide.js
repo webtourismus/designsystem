@@ -9,7 +9,7 @@
               const firstImage = splideInstance.Components.Elements.slides[0].querySelector('picture, img');
               /* setTimeout due race condition in firefox with responsive images */
               window.setTimeout(function() {
-                if (firstImage.height > 0) {
+                if (firstImage?.height > 0) {
                   splideInstance.Components.Arrows.arrows.prev.style.top = (firstImage.height / 2) + 'px';
                   splideInstance.Components.Arrows.arrows.next.style.top = (firstImage.height / 2) + 'px';
                 }

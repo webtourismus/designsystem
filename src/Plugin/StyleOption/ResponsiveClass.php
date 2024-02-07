@@ -121,7 +121,8 @@ class ResponsiveClass extends StyleOptionPluginBase {
     $form['responsive_class']['prefix'] = [
       '#type' => 'select',
       '#title' => $this->getConfiguration('prefix')['label'] ? $this->t($this->getConfiguration('prefix')['label']) : NULL,
-      '#default_value' => $this->getValue('responsive_class_prefix') ?? $this->getConfiguration('prefix')['default'] ?? NULL,
+      // @TODO: find out why responsive_class uses as paragraph behavior plugin does not do submitConfigurationForm()
+      '#default_value' => $this->getValue('responsive_class_prefix') ?? $this->getValue('responsive_class')['prefix'] ?? $this->getConfiguration('prefix')['default'] ?? NULL,
       '#description' => $this->getConfiguration('prefix')['description'] ?? NULL,
     ];
     $prefixOptions = $this->getConfiguration('prefix')['options'] ?? $this::DEFAULT_RESPONSIVE_OPTIONS;
@@ -158,7 +159,8 @@ class ResponsiveClass extends StyleOptionPluginBase {
     $form['responsive_class']['classes'] = [
       '#type' => $this->getConfiguration('classes')['input_type'] ?? 'textfield',
       '#title' => $this->getConfiguration('classes')['label'] ?? NULL,
-      '#default_value' => $this->getValue('responsive_class_classes') ?? $this->getConfiguration('value')['default'] ?? NULL,
+      // @TODO: find out why responsive_class uses as paragraph behavior plugin does not do submitConfigurationForm()
+      '#default_value' => $this->getValue('responsive_class_classes') ?? $this->getValue('responsive_class')['classes'] ?? $this->getConfiguration('value')['default'] ?? NULL,
       '#description' => $this->getConfiguration('classes')['description'] ?? NULL,
       '#required' => $this->getConfiguration('classes')['required'] ?? NULL,
     ];
@@ -228,6 +230,13 @@ class ResponsiveClass extends StyleOptionPluginBase {
   public function build(array $build) {
     $prefix = $this->getValue('responsive_class_prefix') ?? NULL;
     $value = $this->getValue('responsive_class_classes') ?? '';
+    // if rendered as paragraph behavior plugin, then the values are not post-processed by submitConfigurationForm()
+    // and are still in array form
+    // @TODO: find out why responsive_class uses as paragraph behavior plugin does not do submitConfigurationForm()
+    if (empty($value) && is_array($this->getValue('responsive_class')) && !empty($this->getValue('responsive_class')['classes'])) {
+      $prefix = $this->getValue('responsive_class')['prefix'] ?? NULL;
+      $value = $this->getValue('responsive_class')['classes'] ?? '';
+    }
     if (empty($value)) {
       return $build;
     }

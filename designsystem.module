@@ -10,6 +10,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\designsystem\DesignHelper;
+use Drupal\ebr\EntityBusinessrules;
 use Drupal\media\MediaInterface;
 use Drupal\node\Entity\Node;
 use Drupal\paragraphs\Entity\Paragraph;
@@ -62,6 +63,7 @@ function designsystem_preprocess_html(&$variables): void {
   if (is_numeric($node)) {
     $node = Node::load($node);
   }
+  // Add no-banner by default, because we usually want non-node-URLs to be styled similar to node-URLs without banner.
   $variables['html_attributes']->addClass('node--no-banner');
   if ($node instanceof Node) {
     $variables['node'] = $node;
@@ -71,6 +73,11 @@ function designsystem_preprocess_html(&$variables): void {
     // Only route 'entity.node.preview' is known to set a view mode.
     $viewMode = $router->getParameter('view_mode_id') ?? 'full';
     $variables['html_attributes']->addClass("node--view-mode--{$viewMode}");
+
+    $internalId = $node->get(EntityBusinessrules::FIELD_INTERNAL_ID)?->first()?->value;
+    if ($internalId) {
+      $variables['html_attributes']->addClass("node--internal--{$internalId}");
+    }
 
     if (!$node->hasField('field_banner') || $node->get('field_banner')?->isEmpty()) {
       return;
