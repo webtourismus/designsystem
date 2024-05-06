@@ -1,7 +1,7 @@
 services:
   designsystem.helper:
     class: Drupal\designsystem\DesignHelper
-  designsystem.twig.add_to_svg:
-    class: Drupal\designsystem\Twig\AddToSvg
+  designsystem.twig.svg_attributes:
+    class: Drupal\designsystem\Twig\SvgAttributes
     tags:
       - { name: twig.extension }

@@ -159,8 +159,7 @@ class ResponsiveClass extends StyleOptionPluginBase {
     $form['responsive_class']['classes'] = [
       '#type' => $this->getConfiguration('classes')['input_type'] ?? 'textfield',
       '#title' => $this->getConfiguration('classes')['label'] ?? NULL,
-      // @TODO: find out why responsive_class uses as paragraph behavior plugin does not do submitConfigurationForm()
-      '#default_value' => $this->getValue('responsive_class_classes') ?? $this->getValue('responsive_class')['classes'] ?? $this->getConfiguration('value')['default'] ?? NULL,
+      '#default_value' => $this->getValue('responsive_class_classes') ?? $this->getValue('responsive_class')['classes'] ?? $this->getConfiguration('classes')['default'] ?? NULL,
       '#description' => $this->getConfiguration('classes')['description'] ?? NULL,
       '#required' => $this->getConfiguration('classes')['required'] ?? NULL,
     ];
