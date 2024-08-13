@@ -525,8 +525,14 @@ function designsystem_theme($existing, $type, $theme, $path) {
   ];
 }
 
-function designsystem_preprocess_responsive_image(&$variables) {
+/**
+ * Replace width and height attributes <img width="x" height="y"> with
+ * TailwindCSS class <img class="aspect-[x/y]"> to get fluid responive images.
+ */
+function designsystem_preprocess_responsive_image(array &$variables) {
   $styleId = $variables['responsive_image_style_id'] ?? '';
+
+  // preprocess cropping, fixed ratio styles with name schema "WIDTH_HEIGHT_RATIO", e.g. "1920_1080_16x9"
   if (preg_match('/^(\d+)_(\d+)(_.+)?$/', $styleId, $ratios)) {
     if ($variables['output_image_tag'] ?? FALSE == TRUE) {
       $variables['img_element']['#attributes'] = DesignHelper::toAttributeObject($variables['img_element']['#attributes'])->addClass("aspect-[{$ratios[1]}/{$ratios[2]}]");
@@ -535,6 +541,19 @@ function designsystem_preprocess_responsive_image(&$variables) {
     }
     else {
       $variables['#attributes'] = DesignHelper::toAttributeObject($variables['#attributes'])->addClass("aspect-[{$ratios[1]}/{$ratios[2]}]");
+      $variables['#attributes']->removeAttribute('width');
+      $variables['#attributes']->removeAttribute('height');
+    }
+  }
+  // preprocess proportionally scaling (by width) styles with name schema "wWIDTH", e.g. "w1920"
+  elseif ($styleId == 'scale' && $variables['width'] && $variables['height']) {
+    if ($variables['output_image_tag'] ?? FALSE == TRUE) {
+      $variables['img_element']['#attributes'] = DesignHelper::toAttributeObject($variables['img_element']['#attributes'])->addClass("aspect-[{$variables['width']}/{$variables['height']}]");
+      $variables['img_element']['#attributes']->removeAttribute('width');
+      $variables['img_element']['#attributes']->removeAttribute('height');
+    }
+    else {
+      $variables['#attributes'] = DesignHelper::toAttributeObject($variables['#attributes'])->addClass("aspect-[{$variables['width']}/{$variables['height']}]");
       $variables['#attributes']->removeAttribute('width');
       $variables['#attributes']->removeAttribute('height');
     }
