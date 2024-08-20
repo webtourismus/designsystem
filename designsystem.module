@@ -548,21 +548,25 @@ function designsystem_preprocess_responsive_image(array &$variables) {
     $y = $variables['height'];
   }
   else {
-    //return;
+    return;
   }
 
   // <img srcset> (default)
   if ($variables['output_image_tag'] ?? FALSE == TRUE) {
-    $variables['img_element']['#attributes'] = DesignHelper::toAttributeObject($variables['img_element']['#attributes'])->addClass("aspect-[{$x}/{$y}]");
-    $variables['img_element']['#attributes']->removeAttribute('width');
-    $variables['img_element']['#attributes']->removeAttribute('height');
+    $attributesObj = DesignHelper::toAttributeObject($variables['img_element']['#attributes'] ?? []);
+    $variables['img_element']['#attributes'] = $attributesObj;
   }
   // <picture> (technically possible, but rarely used)
   else {
-    $variables['#attributes'] = DesignHelper::toAttributeObject($variables['#attributes'])->addClass("aspect-[{$x}/{$y}]");
-    $variables['#attributes']->removeAttribute('width');
-    $variables['#attributes']->removeAttribute('height');
+    $attributesObj = DesignHelper::toAttributeObject($variables['#attributes'] ?? []);
+    $variables['#attributes'] = $attributesObj;
   }
+
+  if (isset($x) && isset($y)) {
+    $attributesObj->addClass("aspect-[{$x}/{$y}]");
+  }
+  $attributesObj->removeAttribute('width');
+  $attributesObj->removeAttribute('height');
 }
 
 function designsystem_theme_suggestions_node_alter(array &$suggestions, array $variables) {
