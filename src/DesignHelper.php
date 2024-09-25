@@ -7,6 +7,12 @@ namespace Drupal\designsystem;
 use \Drupal\Core\Template\Attribute;
 
 class DesignHelper {
+
+  /**
+   * Current node context for twig fields.
+   */
+  const NODE_FROM_ROUTE = 'node_from_route';
+
   /**
    * Returns a normalized Attribute object from an unknown set of HTML attributes.
    *

@@ -307,6 +307,11 @@ function _getLayoutInfoForParagraph(Paragraph $paragraph):array {
 }
 
 function designsystem_preprocess_field(&$variables, $hook): void {
+  _designsystem_preprocess_field_default_attributes($variables, $hook);
+  _designsystem_preprocess_field_twigfield_cache($variables, $hook);
+}
+
+function _designsystem_preprocess_field_default_attributes(&$variables, $hook): void {
   $entity = $variables['element']['#object'];
   $variables['attributes'] = DesignHelper::toAttributeObject($variables['attributes'] ?? []);
   $variables['attributes']->addClass("field");
@@ -323,7 +328,26 @@ function designsystem_preprocess_field(&$variables, $hook): void {
   }
 }
 
+function _designsystem_preprocess_field_twigfield_cache(&$variables, $hook): void {
+  if ($variables['field_type'] != 'twig') {
+    return;
+  }
 
+  /** @var $item \Drupal\twig_field\Plugin\Field\FieldType\TwigItem */
+  foreach ($variables['element']['#items'] as $delta => $item) {
+    if (strpos($item->value, DesignHelper::NODE_FROM_ROUTE) !== FALSE) {
+      // @see designsystem_twig_field_formatter_variable_alter()
+      $variables['element']['#cache']['contexts'] = Cache::mergeContexts(
+        $variables['element']['#cache']['contexts'] ?? [],
+        ['url.path'],
+      );
+      $variables['items'][$delta]['content']['#cache']['contexts'] = Cache::mergeContexts(
+        $variables['items']['content'][$delta]['contexts'] ?? [],
+        ['url.path'],
+      );
+    }
+  }
+}
 
 function designsystem_entity_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
   // Order of invoking function calls matters here: Build data must be generated first,
@@ -412,7 +436,7 @@ function _designsystem_entity_view_alter__imageRatioField(array &$build, EntityI
  * Inject layout_paragraphs context into paragraphs having a twig_field.
  */
 function designsystem_twig_field_widget_variable_alter(&$options, $alter_context) {
-  $options['Global']['node_from_route'] = 'node_from_route';
+  $options['Global'][DesignHelper::NODE_FROM_ROUTE] = DesignHelper::NODE_FROM_ROUTE;
   if ($alter_context['entity_type'] == 'paragraph') {
     $options['Other']['layout_paragraphs'] = 'layout_paragraphs';
   }
@@ -434,7 +458,8 @@ function designsystem_twig_field_formatter_variable_alter(&$options, $alter_cont
     $node = Node::load($node);
   }
   if ($node instanceof Node) {
-    $options['node_from_route'] = $node;
+    // @see _designsystem_preprocess_field_twigfield_cache()
+    $options[DesignHelper::NODE_FROM_ROUTE] = $node;
   }
 }
 
