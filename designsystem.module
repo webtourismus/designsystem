@@ -170,8 +170,13 @@ function _designsystem_preprocess__content_entity(array &$variables, ContentEnti
 }
 
 
-function designsystem_preprocess_node(&$variables):void {
-  _designsystem_preprocess__content_entity($variables, $variables['node']);
+function designsystem_preprocess_node(&$variables): void {
+  $node = $variables['node'] ?? $variables['elements']['#node'] ?? NULL;
+  if (!$node instanceof ContentEntityInterface) {
+    return;
+  }
+  $variables['node'] = $node;
+  _designsystem_preprocess__content_entity($variables, $node);
 }
 
 /**
@@ -216,13 +221,10 @@ function _designsystem_preprocess_layout__add_default_classes(&$variables): void
   $variables['width_wrapper_attributes']->addClass("width-wrapper--{$layoutName}");
   $variables['attributes']->addClass('layout');
   $variables['attributes']->addClass("layout--{$layoutName}");
-  $layoutParagraphId = $variables['settings']['layout_paragraphs_section']?->getEntity()?->id();
-  if ($layoutParagraphId) {
+  $layoutEntity = $variables['settings']['layout_paragraphs_section']?->getEntity();
+  if ($layoutEntity instanceof ContentEntityInterface && $layoutEntity->id()) {
     $helperReplicateParagraphClasses = [];
-    _designsystem_preprocess__content_entity(
-      $helperReplicateParagraphClasses,
-      $variables['settings']['layout_paragraphs_section']->getEntity()
-    );
+    _designsystem_preprocess__content_entity($helperReplicateParagraphClasses, $layoutEntity);
     $variables['bg_wrapper_attributes']->addClass(...$helperReplicateParagraphClasses['attributes']['class']);
     unset($helperReplicateParagraphClasses);
   }
@@ -240,7 +242,12 @@ function _designsystem_preprocess_layout__add_default_classes(&$variables): void
  * layout information.
  */
 function designsystem_preprocess_paragraph(&$variables): void {
-  $paragraph = $variables['paragraph'];
+  $paragraph = $variables['paragraph'] ?? $variables['elements']['#paragraph'] ?? NULL;
+  if (!$paragraph instanceof ContentEntityInterface) {
+    return;
+  }
+  // Ensure downstream preprocess/templates always see the entity variable.
+  $variables['paragraph'] = $paragraph;
   _designsystem_preprocess__content_entity($variables, $paragraph);
   _designsystem_preprocess_paragraph__add_layout_info($variables);
 }
