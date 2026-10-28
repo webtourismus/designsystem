@@ -172,7 +172,7 @@ class StyleOptionsLayout extends StyleOptionLayoutPlugin {
    * @return array
    *   The decorated build array.
    */
-  protected function buildStyleOptions(string $option_id, $values = [], array $build = [], string $region_id = NULL) {
+  protected function buildStyleOptions(string $option_id, $values = [], array $build = [], ?string $region_id = NULL) {
     if ($instance = $this->getStyleOptionPlugin($option_id)) {
       $instance->setValues($values);
       return $instance->build($build, $region_id);

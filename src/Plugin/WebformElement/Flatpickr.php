@@ -19,7 +19,7 @@ use Drupal\webform\WebformSubmissionInterface;
  */
 class Flatpickr extends TextBase {
 
-  public function prepare(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  public function prepare(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     parent::prepare($element, $webform_submission);
     $element['#attached']['library'][] = 'designsystem/flatpickr';
   }

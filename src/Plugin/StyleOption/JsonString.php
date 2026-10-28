@@ -42,7 +42,7 @@ class JsonString extends HtmlAttribute {
   /**
    * {@inheritDoc}
    */
-  public function build(array $build, string $region_id = NULL) {
+  public function build(array $build, ?string $region_id = NULL) {
     $attributeName = $this->getConfiguration('attribute_name') ?? NULL;
     $key = $this->getConfiguration('key') ?? NULL;
     if (empty($attributeName) || empty($key)) {

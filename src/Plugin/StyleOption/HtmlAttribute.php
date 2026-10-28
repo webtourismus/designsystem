@@ -144,7 +144,7 @@ class HtmlAttribute extends StyleOptionPluginBase {
   /**
    * {@inheritDoc}
    */
-  public function build(array $build, string $region_id = NULL) {
+  public function build(array $build, ?string $region_id = NULL) {
     $value = $this->getValue('html_attribute') ?? NULL;
     if (empty($value)) {
       return $build;

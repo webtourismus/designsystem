@@ -33,7 +33,7 @@ class BackgroundMedia extends HtmlAttribute {
     return $instance;
   }
 
-  public function build(array $build, string $region_id = NULL) {
+  public function build(array $build, ?string $region_id = NULL) {
     $mediaId = $this->getValue('html_attribute') ?? NULL;
     if (empty($mediaId)) {
       return $build;
