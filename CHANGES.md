@@ -1,5 +1,11 @@
 # CHANGES
 
+##### 2026-11-02 1.5.7
+
+- CHANGE: composer.json declares the required contrib modules (components, field_group,
+  layout_paragraphs, link_attributes, paragraphs, style_options, svg_image_field, twig_field,
+  twig_tweak, view_mode_switch, webform) and webtourismus/ebr.
+
 ##### 2026-11-02 1.5.6
 
 - BUGFIX: glightbox library version 3.3.1, so browsers load the updated files.
