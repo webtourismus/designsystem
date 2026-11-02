@@ -34,7 +34,7 @@ flatpickr:
     '../../../libraries/flatpickr/dist/l10n/de.js': {external: true, minified: true, attributes: {onload: "document.dispatchEvent(new CustomEvent('flatpickr:loaded'))"}}
 
 glightbox:
-  version: 3.2.0
+  version: 3.3.1
   css:
     theme:
       '../../../libraries/glightbox/dist/css/glightbox.min.css': {}

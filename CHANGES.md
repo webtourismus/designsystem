@@ -1,5 +1,9 @@
 # CHANGES
 
+##### 2026-11-02 1.5.6
+
+- BUGFIX: glightbox library version 3.3.1, so browsers load the updated files.
+
 ##### 2026-11-02 1.5.5
 
 - BUGFIX: Version in designsystem.info.yml matches the release.
