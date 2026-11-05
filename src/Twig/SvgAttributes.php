@@ -71,7 +71,7 @@ class SvgAttributes extends AbstractExtension {
         $root->removeAttribute('class');
       }
       else {
-        $root->setAttribute('class', join($remainingClasses, ' '));
+        $root->setAttribute('class', implode(' ', $remainingClasses));
       }
     }
     if (!empty($attributes)) {

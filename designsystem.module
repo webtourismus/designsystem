@@ -584,7 +584,7 @@ function designsystem_preprocess_responsive_image(array &$variables) {
   }
 
   // <img srcset> (default)
-  if ($variables['output_image_tag'] ?? FALSE == TRUE) {
+  if ($variables['output_image_tag'] ?? FALSE) {
     $attributesObj = DesignHelper::toAttributeObject($variables['img_element']['#attributes'] ?? []);
     $variables['img_element']['#attributes'] = $attributesObj;
   }

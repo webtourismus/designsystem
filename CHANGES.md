@@ -1,5 +1,11 @@
 # CHANGES
 
+##### 2026-11-05 1.5.8
+
+- BUGFIX: Twig filter `remove_from_svg` failed on PHP 8 when classes remained
+  (arguments of `join()` in the wrong order).
+- Cleanup: simpler `output_image_tag` check, duplicate `unset()` in the webform edit link formatter.
+
 ##### 2026-11-02 1.5.7
 
 - CHANGE: composer.json declares the required contrib modules (components, field_group,

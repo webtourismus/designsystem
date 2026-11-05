@@ -27,7 +27,6 @@ class WebformEntityReferenceEditLinkFormatter extends WebformEntityReferenceLink
     $settings = parent::defaultSettings();
     unset($settings['dialog']);
     unset($settings['attributes']);
-    unset($settings['dialog']);
     $settings['label'] = 'Webform [webform:title]';
     return $settings;
   }
